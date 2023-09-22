@@ -23,18 +23,23 @@
 //!
 //! When you are ready, uncomment the appropriate lines from src/main.rs and
 //! run `cargo run --bin jira-wip` in your terminal!
-use super::store_recap::{TicketStore, Status, TicketDraft, TicketPatch, TicketTitle, TicketDescription};
 use super::id_generation::TicketId;
+use super::store_recap::{
+    Status, TicketDescription, TicketDraft, TicketPatch, TicketStore, TicketTitle,
+};
 use std::error::Error;
-use std::str::FromStr;
 use std::fmt::Formatter;
+use std::str::FromStr;
 
 #[derive(structopt::StructOpt, Clone)]
 /// A small command-line interface to interact with a toy Jira clone, IronJira.
 pub enum Command {
     /// Create a ticket on your board.
     Create {
-        __
+        #[structopt(long)]
+        title: String,
+        #[structopt(long)]
+        description: String,
     },
     /// Edit the details of an existing ticket.
     Edit {
@@ -53,7 +58,8 @@ pub enum Command {
     },
     /// Delete a ticket from the store passing the ticket id.
     Delete {
-        __
+        #[structopt(long)]
+        ticket_id: TicketId,
     },
     /// List all existing tickets.
     List,
@@ -68,23 +74,43 @@ impl FromStr for Status {
     type Err = ParsingError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        __
+        match s.to_lowercase().as_str() {
+            "todo" => Ok(Status::ToDo),
+            "inprogress" => Ok(Self::InProgress),
+            "blocked" => Ok(Self::Blocked),
+            "done" => Ok(Self::Done),
+            _ => Err(ParsingError("Error parsing input".to_string())),
+        }
     }
 }
 
 impl FromStr for TicketTitle {
-    __
+    type Err = ParsingError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match TicketTitle::new(s.to_string()) {
+            Ok(title) => Ok(title),
+            _ => Err(ParsingError("Error parsing title".to_string())),
+        }
+    }
 }
 
 impl FromStr for TicketDescription {
-    __
+    type Err = ParsingError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match TicketDescription::new(s.to_string()) {
+            Ok(description) => Ok(description),
+            _ => Err(ParsingError("Error parsing description".to_string())),
+        }
+    }
 }
 
 /// Our error struct for parsing failures.
 #[derive(Debug)]
 pub struct ParsingError(String);
 
-impl Error for ParsingError { }
+impl Error for ParsingError {}
 
 impl std::fmt::Display for ParsingError {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
@@ -101,7 +127,10 @@ impl std::fmt::Display for ParsingError {
 /// touching in this workshop.
 /// Check its section in the Rust book if you are curious:
 /// https://doc.rust-lang.org/book/ch17-02-trait-objects.html#using-trait-objects-that-allow-for-values-of-different-types
-pub fn handle_command(ticket_store: &mut TicketStore, command: Command) -> Result<(), Box<dyn Error>> {
+pub fn handle_command(
+    ticket_store: &mut TicketStore,
+    command: Command,
+) -> Result<(), Box<dyn Error>> {
     match command {
         Command::Create { description, title } => {
             todo!()
@@ -136,8 +165,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn invalid_status_fails_to_be_parsed()
-    {
+    fn invalid_status_fails_to_be_parsed() {
         let invalid_status = "Not a good status";
         assert!(Status::from_str(invalid_status).is_err());
     }
