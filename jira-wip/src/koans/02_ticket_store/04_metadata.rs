@@ -31,7 +31,14 @@ impl TicketStore {
 
     pub fn save(&mut self, ticket: Ticket) -> TicketId {
         let id = self.generate_id();
-        self.data.insert(id, ticket);
+        self.data.insert(
+            id,
+            Ticket {
+                created_at: Some(Utc::now()),
+                id: Some(id),
+                ..ticket
+            },
+        );
         id
     }
 
@@ -50,6 +57,8 @@ pub struct Ticket {
     title: String,
     description: String,
     status: Status,
+    created_at: Option<DateTime<Utc>>,
+    id: Option<TicketId>,
 }
 
 impl Ticket {
@@ -66,13 +75,13 @@ impl Ticket {
     }
 
     // The datetime when the ticket was saved in the store, if it was saved.
-    pub fn created_at(&self) -> __ {
-        todo!()
+    pub fn created_at(&self) -> Option<DateTime<Utc>> {
+        self.created_at
     }
 
     // The id associated with the ticket when it was saved in the store, if it was saved.
-    pub fn id(&self) -> __ {
-        todo!()
+    pub fn id(&self) -> Option<&TicketId> {
+        self.id.as_ref()
     }
 }
 
@@ -91,6 +100,8 @@ pub fn create_ticket(title: String, description: String, status: Status) -> Tick
         title,
         description,
         status,
+        created_at: None,
+        id: None,
     }
 }
 
